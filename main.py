@@ -1,6 +1,7 @@
 import telebot
 from functions_student import registration
 from config import TOKEN
+from database import print_res
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -14,9 +15,14 @@ def start_message(message):
                                       f'github.com/ivanov/task"')
 
 
+@bot.message_handler(commands=['database'])
+def database(message):
+    bot.send_message(message.chat.id, print_res())
+
+
 @bot.message_handler(content_types=['text'])
 def student_register(message):
-    bot.register_next_step_handler(registration(message), student_register)
+    registration(message)
 
 
 if __name__ == '__main__':

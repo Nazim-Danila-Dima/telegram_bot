@@ -1,7 +1,8 @@
 import telebot
 from config import TOKEN
-import psycopg2
-from psycopg2 import Error
+from database import database_insert
+from database import database_checking
+from database import database_update
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -38,28 +39,9 @@ def registration(message):
         return bot.send_message(message.chat.id,
                                 f'{message.from_user.first_name}, некорректная ссылка')
 
-    try:
-        # Подключение к существующей базе данных
-        connection = psycopg2.connect(user="postgres",
-                                      password="nazim080",
-                                      host="127.0.0.1",
-                                      port="5432",
-                                      database="students")
-        # Курсор для выполнения операций с базой данных
-        cursor = connection.cursor()
-        sql_insert = f"insert into students(name, group_num, task_num, var_num, git) " \
-                     f"values('{name}', '{group}', {task}, {variant}, '{git}');"
-        cursor.execute(sql_insert)
-        connection.commit()
-        cursor.execute('select * from students')
-        print(cursor.fetchall())
-        print(connection.get_dsn_parameters(), "\n")
-    except (Exception, Error) as error:
-        print("Ошибка при работе с PostgreSQL", error)
-    finally:
-        if connection:
-            cursor.close()
-            connection.close()
-            print("Соединение с PostgreSQL закрыто")
+    if database_checking(name, task, variant) != None:
+        database_insert(name, group, task, variant, git)
+    else:
+        database_update(name, group, task, variant, git)
     return bot.send_message(message.chat.id,
                             f'{message.from_user.first_name}, задание принято, идет проверка...')
